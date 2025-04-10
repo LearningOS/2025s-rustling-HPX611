@@ -2,11 +2,11 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
+
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
-use std::vec::*;
+
 
 #[derive(Debug)]
 struct Node<T> {
@@ -29,13 +29,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: std::cmp::PartialOrd> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: std::cmp::PartialOrd> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -72,11 +72,39 @@ impl<T> LinkedList<T> {
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
 		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut merged_list = LinkedList::new();
+        let mut current_a = list_a.start;
+        let mut current_b = list_b.start;
+
+        while current_a.is_some() || current_b.is_some() {
+            match (current_a, current_b) {
+                (Some(a), Some(b)) => {
+                    if unsafe { (*a.as_ptr()).val <= (*b.as_ptr()).val } {
+                        let next = unsafe { (*a.as_ptr()).next };
+                        merged_list.add(unsafe { std::ptr::read(a.as_ptr()).val });
+                        current_a = next;
+                        current_b = Some(b);
+                    } else {
+                        let next = unsafe { (*b.as_ptr()).next };
+                        merged_list.add(unsafe { std::ptr::read(b.as_ptr()).val });
+                        current_b = next;
+                        current_a = Some(a);
+                    }
+                }
+                (Some(a), None) => {
+                    let next = unsafe { (*a.as_ptr()).next };
+                    merged_list.add(unsafe { std::ptr::read(a.as_ptr()).val });
+                    current_a = next;
+                }
+                (None, Some(b)) => {
+                    let next = unsafe { (*b.as_ptr()).next };
+                    merged_list.add(unsafe { std::ptr::read(b.as_ptr()).val });
+                    current_b = next;
+                }
+                (None, None) => break,
+            }
         }
+        merged_list
 	}
 }
 
@@ -123,7 +151,7 @@ mod tests {
         let mut list_str = LinkedList::<String>::new();
         list_str.add("A".to_string());
         list_str.add("B".to_string());
-        list_str.add("C".to_string());
+        list_str.add("C".to_string()); 
         println!("Linked List is {}", list_str);
         assert_eq!(3, list_str.length);
     }

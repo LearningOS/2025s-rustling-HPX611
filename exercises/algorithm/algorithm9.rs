@@ -2,7 +2,7 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -37,7 +37,13 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.count += 1;
+        if self.count >= self.items.len() {
+            self.items.push(value);
+        } else {
+            self.items[self.count] = value;
+        }
+        self.bubble_up(self.count);
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +63,42 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        if right > self.count {
+            left
+        } else if (self.comparator)(&self.items[left], &self.items[right]) {
+            left
+        } else {
+            right
+        }
+    }
+    fn bubble_up(&mut self, idx: usize) {
+        let mut current = idx;
+        let cmp = self.comparator;
+        while current > 1 {
+            let parent = self.parent_idx(current);
+            if cmp(&self.items[current], &self.items[parent]) {
+                self.items.swap(current, parent);
+                current = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn bubble_down(&mut self, idx: usize) {
+        let mut current = idx;
+        let cmp = self.comparator;
+        while self.children_present(current) {
+            let smallest = self.smallest_child_idx(current);
+            if cmp(&self.items[smallest], &self.items[current]) {
+                self.items.swap(current, smallest);
+                current = smallest;
+            } else {
+                break;
+            }
+        }
     }
 }
 
@@ -84,8 +124,14 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+        let result = std::mem::replace(&mut self.items[1], T::default());
+        self.items.swap(1, self.count);
+        self.count -= 1;
+        self.bubble_down(1);
+        Some(result)
     }
 }
 
